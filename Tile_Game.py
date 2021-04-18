@@ -136,6 +136,7 @@ class Brick(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+#class for a score board
 class ScoreBoard():
     def __init__(self, x, y, width, height):
         self.width = width
@@ -151,6 +152,7 @@ class ScoreBoard():
         screen.blit(score_label, (self.x, self.y+40))
         
 
+#class for healthbar
 class HealthBar():
     def __init__(self, objX, objY, width, height, initHealth):
         self.maxHealth = initHealth
@@ -197,7 +199,7 @@ class HealthBar():
         screen.blit(self.outterContainer, (self.rectOutter.x, self.rectOutter.y))
         screen.blit(self.innerContainer, (self.rectInner.x, self.rectInner.y))
 
-#Player class
+#Player base class
 class Player(People, pygame.sprite.Sprite):
     def __init__(self, x, y, width, height, color, speed, health, bricks, loot, inventory_capacity):
         super().__init__(x, y, width, height, color, speed, health, bricks)
@@ -404,6 +406,7 @@ class Loot(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+#paramedic list loot
 class Paramedic(Loot):
     def __init__(self, x, y, width, height, color, paramedicType):
         super().__init__(x, y, width, height, color, "paramedic", paramedicType)
@@ -417,6 +420,7 @@ class Paramedic(Loot):
             self.healing = 75
             self.weight = 10
 
+#inventory list class
 class InventoryList():
     def __init__(self, x, y, width, height):
         self.x = x
@@ -477,7 +481,7 @@ class InventoryList():
         screen.blit(header, (self.x, self.y))
         
 
-
+#weapons Loot class
 class Weapon(Loot):
     def __init__(self, x, y, width, height, color, name):
         super().__init__(x, y, width, height, color, "weapon", name)
@@ -505,6 +509,7 @@ class Weapon(Loot):
 #    def __init__(self, )
 #        super().__init__()
 
+#Enemy class
 class Enemy(People):
     def __init__(self, x, y, width, height, color, speed, health, bricks, player):
         super().__init__(x, y, width, height, color, speed, health, bricks)
@@ -567,7 +572,7 @@ class Enemy(People):
 
         #print(self.attackVector[2])
 
-
+#armor class
 class Armour(Loot):
     def __init__(self, x, y, width, height, color, Atype):
         super().__init__(x, y, width, height, color, "armour", Atype)
@@ -578,13 +583,14 @@ class Armour(Loot):
         elif(Atype == "heavy"):
             self.armourHealth = 100
 
+#bullet loot class
 class BulletsLoot(Loot):
     def __init__(self, x, y, width, height, color, bullet_type):
         super().__init__(x, y, width, height, color, "bullet", bullet_type)
         self.amount = random.randint(5, 50)
 #Bullet class
 
-
+#bullet class
 class Bullet(pygame.sprite.Sprite):
     isVisible = False
 
@@ -700,7 +706,8 @@ class Game():
 
         #self.all_sprites_group.add(loot)
         self.loot_sprites_group.add(loot)
-        
+
+    #function for rendering outer walls on the window 
     def createOutterWalls(self):
         for row in range(0, int(1000/self.brickSide)) :
             for col in range(0, int(1000/self.brickSide)):
