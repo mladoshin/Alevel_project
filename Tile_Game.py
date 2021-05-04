@@ -15,6 +15,10 @@ BULLET_TYPES = ["pistols", "rifles", "shotguns"]
 ARMOUR_TYPES = ["heavy", "medium", "light"]
 PARAMEDIC_TYPES = ["heavy", "medium", "light"]
 
+
+deltaX = 0
+deltaY = 0
+
 pygame.init()
 
 size = (1000, 1000)
@@ -518,59 +522,51 @@ class Enemy(People):
         self.player = player
         self.fieldView = 400
 
-    def attack(self):
-        
-        if (self.attackVector[2] <= self.fieldView):
-            self.move()
 
-    def moveX(self, x):
-        #print("VectorX: "+str(self.attackVector[0])+"   VectorY: "+str(self.attackVector[1]))
-        pass
-
-    def moveY(self, y):
-        pass
-
-    def move(self):
-        no_direction=self.isCollision()
-        if (self.attackVector[0] == 0):
-            fraction = 0
-        else:
-            fraction = self.attackVector[1] / self.attackVector[0]
-
-        xSpeed = self.speed/(math.sqrt(1+pow(fraction, 2)))
-        ySpeed = xSpeed*fraction
-        
-        #print(ySpeed)
-        if (self.attackVector[0] < 0):
-            #left
-            self.rect.x -= math.ceil(xSpeed)
-        else:
-            #right
-            self.rect.x += math.ceil(xSpeed)
-
-
-        if (self.attackVector[1] < 0):
-            #down
-            self.rect.y += math.ceil(ySpeed)
-        else:
-            #up
-            self.rect.y -= (-1)*math.floor(ySpeed)
 
 
     def getVector(self):
         return self.attackVector
 
     def update(self):
-        
-        self.attackVector[0] = self.player.rect.x-self.rect.x
-        self.attackVector[1] = self.rect.y-self.player.rect.y
-        self.attackVector[2] = math.sqrt(pow(self.attackVector[0], 2)+pow(self.attackVector[1], 2))
-        #print(self.attackVector)
-        #print("playerX: "+str(self.player.rect.x)+"  enemyX: "+str(self.rect.x))
-        if (self.attackVector[2] <= self.fieldView):
-            self.attack()
+        #delta x
+        self.attackVector[0] = self.rect.x - self.player.rect.x
+        #delta y
+        self.attackVector[1] = self.rect.y - self.player.rect.y
 
-        #print(self.attackVector[2])
+        #distance between enemy and player
+        self.attackVector[2] = int(math.hypot(self.attackVector[0], self.attackVector[1]))
+
+        distance = int(math.hypot(self.attackVector[0], self.attackVector[1]))
+
+        radians = math.atan2(self.attackVector[1], self.attackVector[0])
+        dx = math.cos(radians)
+        dy = math.sin(radians)
+
+        
+        if distance > 0:
+            print("playerX: "+str(self.player.rect.x))
+            print("playerY: "+str(self.player.rect.y))
+            distance -= 1
+            if(dx <= 0 and dy <= 0):
+                print("RHS bottom")
+                self.rect.x = int(self.rect.x - dx)
+                self.rect.y = int(self.rect.y - dy)
+            else:
+                self.rect.x -= dx
+                self.rect.y = int(self.rect.y - dy)
+            
+
+        #if (self.attackVector[2] <= self.fieldView):
+            #self.attack()
+            
+
+        
+
+
+
+
+        
 
 #armor class
 class Armour(Loot):
@@ -621,11 +617,13 @@ class Bullet(pygame.sprite.Sprite):
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
+
     def update(self, group):
         self.move()
         if (self.rect.y < -20):
             group.remove(self)
             print("Remove the bullet")
+
 
 
 #Game class
