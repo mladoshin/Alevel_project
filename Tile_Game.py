@@ -528,6 +528,8 @@ class Enemy(People):
     def getVector(self):
         return self.attackVector
 
+
+    #the enemy should chase the player in here, but IT DOESN't WORK!
     def update(self):
         #delta x
         self.attackVector[0] = self.rect.x - self.player.rect.x
@@ -545,11 +547,11 @@ class Enemy(People):
 
         
         if distance > 0:
-            print("playerX: "+str(self.player.rect.x))
-            print("playerY: "+str(self.player.rect.y))
+            #print("playerX: "+str(self.player.rect.x))
+            #print("playerY: "+str(self.player.rect.y))
             distance -= 1
             if(dx <= 0 and dy <= 0):
-                print("RHS bottom")
+                #print("RHS bottom")
                 self.rect.x = int(self.rect.x - dx)
                 self.rect.y = int(self.rect.y - dy)
             else:
