@@ -205,7 +205,7 @@ class HealthBar():
 
 #Player base class
 class Player(People, pygame.sprite.Sprite):
-    def __init__(self, x, y, width, height, color, speed, health, bricks, loot, inventory_capacity):
+    def __init__(self, x, y, width, height, color, speed, health, bricks, loot, inventory_capacity, all_sprites_group):
         super().__init__(x, y, width, height, color, speed, health, bricks)
         pygame.sprite.Sprite.__init__(self)
         self.weight_capacity = inventory_capacity
@@ -217,6 +217,7 @@ class Player(People, pygame.sprite.Sprite):
         self.weapons = [False, False, False]
         self.max_amount_weapons = 3
         self.loot_group = loot
+        self.all_sprites_group = all_sprites_group
 
     def getInventoryWeight(self):
         weight = 0
@@ -269,6 +270,7 @@ class Player(People, pygame.sprite.Sprite):
                     self.inventory.append(hit)
                 
                 self.loot_group.remove(hit)
+                self.all_sprites_group.remove(hit)
 
                 if(hit.name == "bullet pistols"):
                     self.bullets[0] += hit.amount
@@ -369,14 +371,17 @@ class Player(People, pygame.sprite.Sprite):
             #create a bullet object of type "pistol"
             bullet = Bullet(self.rect.x, self.rect.y, 10, 20, WHITE, "pistols")
             self.bullets_list.add(bullet)
+            self.all_sprites_group.add(bullet)
             self.bullets[0] -= 1
         elif(self.bullets[1] > 0 and self.selectedWeapon == 1 and self.weapons[1]==True):
             bullet = Bullet(self.rect.x, self.rect.y, 10, 20, GREEN, "rifles")
             self.bullets_list.add(bullet)
+            self.all_sprites_group.add(bullet)
             self.bullets[1] -= 1
         elif(self.bullets[2] > 0 and self.selectedWeapon == 2 and self.weapons[2]==True):
             bullet = Bullet(self.rect.x, self.rect.y, 10, 20, BLUE, "gunshots")
             self.bullets_list.add(bullet)
+            self.all_sprites_group.add(bullet)
             self.bullets[2] -= 1
 
 
@@ -620,10 +625,11 @@ class Bullet(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
 
-    def update(self, group):
+    def update(self, group, all_sprites_group):
         self.move()
         if (self.rect.y < -20):
             group.remove(self)
+            all_sprites_group.remove(self)
             print("Remove the bullet")
 
 
@@ -644,7 +650,7 @@ class Game():
         self.loot_sprites_group = pygame.sprite.Group()
 
         #init the player and add him to the sprite group
-        self.player = Player(100, 100, 20, 20, BLUE, 1, 100, self.bricks_sprites_group, self.loot_sprites_group, 50)
+        self.player = Player(100, 100, 20, 20, BLUE, 1, 100, self.bricks_sprites_group, self.loot_sprites_group, 50, self.all_sprites_group)
         self.all_sprites_group.add(self.player)
 
         self.done = False
@@ -666,6 +672,7 @@ class Game():
         for i in range(5, 10):
             brick = Brick(i*self.brickSide, 5*40, self.brickSide)
             self.bricks_sprites_group.add(brick)
+            self.all_sprites_group.add(brick)
             self.numBricks += 1
         print(self.numBricks)
 
@@ -706,6 +713,7 @@ class Game():
 
         #self.all_sprites_group.add(loot)
         self.loot_sprites_group.add(loot)
+        self.all_sprites_group.add(loot)
 
     #function for rendering outer walls on the window 
     def createOutterWalls(self):
@@ -715,10 +723,12 @@ class Game():
                     #add block
                     brick = Brick(col*self.brickSide, row*self.brickSide, self.brickSide)
                     self.bricks_sprites_group.add(brick)
+                    self.all_sprites_group.add(brick)
                     self.numBricks += 1
                 elif(col == 0) or (col == 1000/40-1):
                     brick = Brick(col*self.brickSide, row*self.brickSide, self.brickSide)
                     self.bricks_sprites_group.add(brick)
+                    self.all_sprites_group.add(brick)
                     self.numBricks += 1
 
     def start(self):
@@ -743,16 +753,22 @@ class Game():
     def reRender(self):
         self.player.isBulletCollisionWithEnemy(self.enemy_sprites_group, self.incrementKills, self.incrementScore)
         self.enemy_sprites_group.update()
-        self.player.bullets_list.update(self.player.bullets_list)
+        self.player.bullets_list.update(self.player.bullets_list, self.all_sprites_group)
         #render the player
+
         self.all_sprites_group.draw(screen)
-        self.player.bullets_list.draw(screen)
+        #self.all_sprites_group.update()
+
+        #self.player.bullets_list.draw(screen)
+
         self.player.drawHealthBar()
-        self.bricks_sprites_group.draw(screen)
-        self.loot_sprites_group.draw(screen)
+
+        #self.bricks_sprites_group.draw(screen)
+        #self.loot_sprites_group.draw(screen)
+
         self.scoreBoard.draw(self.kills, self.score)
         self.inventoryList.draw(self.player.getInventory(), self.player.getInventoryWeight(), self.player.getWeightCapacity(), self.player.getBulletsList(), self.player.getWeaponsList())
-        #self.loot_sprites_group.draw(screen)
+        
         if (len(self.loot_sprites_group)==0):
             self.createLoot()
         
