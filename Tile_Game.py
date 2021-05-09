@@ -79,27 +79,27 @@ class People(pygame.sprite.Sprite):
 
         for hit in player_hit_group:
             flag = True
-            #print("hit.rect.y: "+str(hit.rect.y))
-            #print("self.rect.y: "+str(self.rect.y))
+            print("hit.rect.y: "+str(hit.rect.y))
+            print("self.rect.y: "+str(self.rect.y))
             x = hit.rect.x
             y = hit.rect.y
 
-            if(self.rect.y == y+39):
+            if(self.rect.y == y+40-self.speed):
                 no_direction[0] = "up"
                 self.rect.y = y+40
                 print("up")
 
-            if(self.rect.y+19 == y):
+            if(self.rect.y+20-self.speed == y):
                 no_direction[1] = "down"
                 self.rect.y = y-20
                 print("down")
 
-            if(self.rect.x == x+39):
+            if(self.rect.x == x+40-self.speed):
                 no_direction[2] = "left"
                 self.rect.x = x+40
                 print("left")
 
-            if(self.rect.x+19 == x):
+            if(self.rect.x+20-self.speed == x):
                 no_direction[3] = "right"
                 self.rect.x = x-20
                 print("right")
