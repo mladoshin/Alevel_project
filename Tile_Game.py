@@ -1,6 +1,7 @@
 import pygame
 import math
 import random
+import time
 
 BLACK = (0,0, 0)
 WHITE = (255, 255,255)
@@ -401,6 +402,12 @@ class Player(People, pygame.sprite.Sprite):
 
         self.updatePlayerPosition(self.rect.x, self.rect.y)
 
+    def getXPosition(self):
+        return self.rect.x
+
+    def getYPosition(self):
+        return self.rect.y
+
 class Loot(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height, color, loot_type, name):
         super().__init__()
@@ -524,8 +531,10 @@ class Enemy(People):
         super().__init__(x, y, width, height, color, speed, health, bricks)
         pygame.sprite.Sprite.__init__(self)
         self.attackVector = [0, 0, 0]
-        self.player = player
+        #self.player = player
         self.fieldView = 400
+        self.counter = 0
+        self.isAttacking = False
 
 
 
@@ -535,11 +544,11 @@ class Enemy(People):
 
 
     #the enemy should chase the player in here, but IT DOESN't WORK!
-    def update(self):
+    def update(self, playerX, playerY):
         #delta x
-        self.attackVector[0] = self.rect.x - self.player.rect.x
+        self.attackVector[0] = self.rect.x - playerX
         #delta y
-        self.attackVector[1] = self.rect.y - self.player.rect.y
+        self.attackVector[1] = self.rect.y - playerY
 
         #distance between enemy and player
         self.attackVector[2] = int(math.hypot(self.attackVector[0], self.attackVector[1]))
@@ -550,25 +559,44 @@ class Enemy(People):
         dx = math.cos(radians)
         dy = math.sin(radians)
 
-        
-        if distance > 0:
+        if(distance <= self.fieldView and not self.isAttacking):
+            print("Start attack")
+            self.isAttacking = True
+
+        if(distance > self.fieldView and self.isAttacking):
+            print("Stop Attack")
+            self.isAttacking = False
+
+            
+
+        if distance > 0 and distance <= self.fieldView and self.isAttacking:
             #print("playerX: "+str(self.player.rect.x))
             #print("playerY: "+str(self.player.rect.y))
             distance -= 1
             if(dx <= 0 and dy <= 0):
                 #print("RHS bottom")
-                self.rect.x = int(self.rect.x - dx)
-                self.rect.y = int(self.rect.y - dy)
-            else:
+                #print(dx)
+                self.rect.x += math.ceil(-1*dx)
+                self.rect.y += math.ceil(-1*dy)
+            elif(dx >= 0 and dy >= 0):
+               # print("LHS TOP")
+                #print(dy)
                 self.rect.x -= dx
-                self.rect.y = int(self.rect.y - dy)
-            
-
+                self.rect.y -= dy
+            elif(dx <= 0 and dy >= 0):
+                #print("RHS TOP")
+                self.rect.x += math.ceil(-1*dx)
+                self.rect.y -= dy
+            elif(dx >= 0 and dy <= 0):
+                #print("LHS BOTTOM")
+                #print(dx)
+                self.rect.x -= dx
+                self.rect.y -= math.floor(dy)
         #if (self.attackVector[2] <= self.fieldView):
             #self.attack()
             
 
-        
+        self.counter +=1
 
 
 
@@ -650,7 +678,7 @@ class Game():
         self.loot_sprites_group = pygame.sprite.Group()
 
         #init the player and add him to the sprite group
-        self.player = Player(100, 100, 20, 20, BLUE, 1, 100, self.bricks_sprites_group, self.loot_sprites_group, 50, self.all_sprites_group)
+        self.player = Player(100, 100, 20, 20, BLUE, 2, 100, self.bricks_sprites_group, self.loot_sprites_group, 50, self.all_sprites_group)
         self.all_sprites_group.add(self.player)
 
         self.done = False
@@ -751,8 +779,11 @@ class Game():
             self.all_sprites_group.add(enemy)
 
     def reRender(self):
+        playerX = self.player.getXPosition()
+        playerY = self.player.getYPosition()
+
         self.player.isBulletCollisionWithEnemy(self.enemy_sprites_group, self.incrementKills, self.incrementScore)
-        self.enemy_sprites_group.update()
+        self.enemy_sprites_group.update(playerX, playerY)
         self.player.bullets_list.update(self.player.bullets_list, self.all_sprites_group)
         #render the player
 
@@ -822,13 +853,13 @@ class Game():
             if keys[pygame.K_u]:
                 self.player.heal(3)
 
-            if keys[pygame.K_LSHIFT]:
+            #if keys[pygame.K_LSHIFT]:
                 #move the player down
-                self.player.setSpeed(10)
-            else:
-                self.player.setSpeed(1)
+                #self.player.setSpeed(10)
+            #else:
+                #self.player.setSpeed(1)
 
-            clock.tick(240)
+            clock.tick(60)
         #EndWhile
 
 
