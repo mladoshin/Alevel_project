@@ -536,8 +536,13 @@ class Enemy(People):
         self.counter = 0
         self.isAttacking = False
 
+    def move(self, x, y):
+        no_direction=self.isCollision()
+        #check the collision with loot
+       
+        print(no_direction)
 
-
+        #self.updatePlayerPosition(self.rect.x, self.rect.y)
 
     def getVector(self):
         return self.attackVector
@@ -567,7 +572,8 @@ class Enemy(People):
             print("Stop Attack")
             self.isAttacking = False
 
-            
+        enemyX = self.rect.x
+        enemyY = self.rect.y
 
         if distance > 0 and distance <= self.fieldView and self.isAttacking:
             #print("playerX: "+str(self.player.rect.x))
@@ -578,6 +584,7 @@ class Enemy(People):
                 #print(dx)
                 self.rect.x += math.ceil(-1*dx)
                 self.rect.y += math.ceil(-1*dy)
+                
             elif(dx >= 0 and dy >= 0):
                # print("LHS TOP")
                 #print(dy)
@@ -595,7 +602,7 @@ class Enemy(People):
         #if (self.attackVector[2] <= self.fieldView):
             #self.attack()
             
-
+        self.move(enemyX, enemyY)
         self.counter +=1
 
 
