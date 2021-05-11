@@ -54,8 +54,11 @@ class People(pygame.sprite.Sprite):
         self.playerX = 0
         self.playerY = 0
 
-        #health bar component
         self.health_bar = HealthBar(self.rect.x, self.rect.y, self.width*2, self.height/3, self.health)
+
+        #health bar component
+        
+
 
     def updatePlayerPosition(self, x, y):
         self.playerX = x
@@ -79,30 +82,29 @@ class People(pygame.sprite.Sprite):
 
         for hit in player_hit_group:
             flag = True
-            print("hit.rect.y: "+str(hit.rect.y))
-            print("self.rect.y: "+str(self.rect.y))
+            
             x = hit.rect.x
             y = hit.rect.y
 
             if(self.rect.y == y+40-self.speed):
                 no_direction[0] = "up"
                 self.rect.y = y+40
-                print("up")
+                #print("up")
 
             if(self.rect.y+20-self.speed == y):
                 no_direction[1] = "down"
                 self.rect.y = y-20
-                print("down")
+                #print("down")
 
             if(self.rect.x == x+40-self.speed):
                 no_direction[2] = "left"
                 self.rect.x = x+40
-                print("left")
+                #print("left")
 
             if(self.rect.x+20-self.speed == x):
                 no_direction[3] = "right"
                 self.rect.x = x-20
-                print("right")
+                #print("right")
 
 
         return no_direction
@@ -120,12 +122,8 @@ class People(pygame.sprite.Sprite):
         bullet = Bullet(self.rect.x, self.rect.y, 10, 20, WHITE, "pistols")
         self.bullets_list.add(bullet)
 
-    def drawHealthBar(self):
-       
-       if(self.health < 100):
-           #print("Health: "+str(self.health))
-           self.health_bar.update(self, self.health, True)
-           self.health_bar.draw()
+    
+           
 
 
 
@@ -175,7 +173,7 @@ class HealthBar():
         self.maxWidth = width
         self.height = height
 
-    def update(self, player, health, isPlayer):
+    def update(self, playerX, playerY, playerWidth, playerHeight, health, isPlayer):
         percent = health/self.maxHealth
         newWidth = int(self.maxWidth * percent)
 
@@ -185,18 +183,18 @@ class HealthBar():
         self.innerContainer = pygame.Surface([newWidth, self.height])
         self.innerContainer.fill(GREEN)
         self.rectInner = self.innerContainer.get_rect()
-        self.rectInner.x = player.rect.x-player.width/2
+        self.rectInner.x = playerX-playerWidth/2
         
 
-        self.rectOutter.x = player.rect.x-player.width/2
+        self.rectOutter.x = playerX-playerWidth/2
         if (isPlayer):
-            self.rectOutter.y = player.rect.y + player.height + 10
-            self.rectInner.y = player.rect.y + player.height + 10
+            self.rectOutter.y = playerY + playerHeight + 10
+            self.rectInner.y = playerY + playerHeight + 10
         else:
             print(self)
 
-            self.rectOutter.y = player.rect.y - 10
-            self.rectInner.y = player.rect.y - 10
+            self.rectOutter.y = playerY - 10
+            self.rectInner.y = playerY - 10
 
         self.draw()
 
@@ -219,6 +217,8 @@ class Player(People, pygame.sprite.Sprite):
         self.max_amount_weapons = 3
         self.loot_group = loot
         self.all_sprites_group = all_sprites_group
+        self.health_bar = HealthBar(self.rect.x, self.rect.y, self.width*2, self.height/3, self.health)
+        self.all_sprites_group.add()
 
     def getInventoryWeight(self):
         weight = 0
@@ -536,11 +536,65 @@ class Enemy(People):
         self.counter = 0
         self.isAttacking = False
 
+    def drawHealthBar(self):
+       
+       if(self.health <= 100):
+           #print("Health: "+str(self.health))
+           self.health_bar.update(self.rect.x, self.rect.y, self.rect.width, self.rect.height, self.health, False)
+
+    def isCollision(self):
+        player_hit_group = pygame.sprite.spritecollide(self, self.bricks, False)
+        flag = False
+        direction = ""
+        x = None
+        y = None
+
+        no_direction=["", "", "", ""]
+
+        for hit in player_hit_group:
+            flag = True
+            
+            x = hit.rect.x
+            y = hit.rect.y
+
+            if(self.rect.y == y+40-self.speed):
+                no_direction[0] = "up"
+                self.rect.y = y+41
+                self.rect.x += 1
+                #print("up")
+
+            if(self.rect.y+20-self.speed == y):
+                no_direction[1] = "down"
+                self.rect.y = y-21
+                self.rect.x += 1
+                #print("down")
+
+            if(self.rect.x == x+40-self.speed):
+                no_direction[2] = "left"
+                self.rect.x = x+39
+                #print("left")
+
+            if(self.rect.x+20-self.speed == x):
+                no_direction[3] = "right"
+                self.rect.x = x-19
+                #print("right")
+
+
+        return no_direction
+
     def move(self, x, y):
         no_direction=self.isCollision()
         #check the collision with loot
-       
-        print(no_direction)
+        #if(no_direction[0] != ""):
+           #print("Can't move up")
+
+        if (no_direction[0] == "up"):
+            #if(no_direction[0])
+            print(no_direction)
+            self.rect.x += 2
+            #self.rect.y += 1
+
+        #print(no_direction)
 
         #self.updatePlayerPosition(self.rect.x, self.rect.y)
 
@@ -550,6 +604,7 @@ class Enemy(People):
 
     #the enemy should chase the player in here, but IT DOESN't WORK!
     def update(self, playerX, playerY):
+        self.drawHealthBar()
         #delta x
         self.attackVector[0] = self.rect.x - playerX
         #delta y
@@ -794,12 +849,17 @@ class Game():
         self.player.bullets_list.update(self.player.bullets_list, self.all_sprites_group)
         #render the player
 
+        collision_with_enemy = pygame.sprite.spritecollide(self.player, self.enemy_sprites_group, True)
+
+        for hit in collision_with_enemy:
+            self.player.health -= 10
+
         self.all_sprites_group.draw(screen)
         #self.all_sprites_group.update()
-
+        self.player.health_bar.update(playerX, playerY, self.player.rect.width, self.player.rect.height, self.player.health, True)
         #self.player.bullets_list.draw(screen)
 
-        self.player.drawHealthBar()
+        #self.player.drawHealthBar()
 
         #self.bricks_sprites_group.draw(screen)
         #self.loot_sprites_group.draw(screen)
@@ -807,6 +867,9 @@ class Game():
         self.scoreBoard.draw(self.kills, self.score)
         self.inventoryList.draw(self.player.getInventory(), self.player.getInventoryWeight(), self.player.getWeightCapacity(), self.player.getBulletsList(), self.player.getWeaponsList())
         
+        if (self.player.health <= 0):
+            self.done = True
+
         if (len(self.loot_sprites_group)==0):
             self.createLoot()
         
