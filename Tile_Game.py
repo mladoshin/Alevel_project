@@ -51,8 +51,7 @@ class People(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-        self.playerX = 0
-        self.playerY = 0
+        
 
         self.health_bar = HealthBar(self.rect.x, self.rect.y, self.width*2, self.height/3, self.health)
 
@@ -191,7 +190,7 @@ class HealthBar():
             self.rectOutter.y = playerY + playerHeight + 10
             self.rectInner.y = playerY + playerHeight + 10
         else:
-            print(self)
+            
 
             self.rectOutter.y = playerY - 10
             self.rectInner.y = playerY - 10
@@ -218,7 +217,7 @@ class Player(People, pygame.sprite.Sprite):
         self.loot_group = loot
         self.all_sprites_group = all_sprites_group
         self.health_bar = HealthBar(self.rect.x, self.rect.y, self.width*2, self.height/3, self.health)
-        self.all_sprites_group.add()
+        #self.all_sprites_group.add()
 
     def getInventoryWeight(self):
         weight = 0
@@ -226,6 +225,12 @@ class Player(People, pygame.sprite.Sprite):
             weight += item.weight
         
         return weight
+
+    def isBulletCollidedWithWall(self):
+        collision_group = pygame.sprite.groupcollide(self.bullets_list, self.bricks, True, True)
+    
+    def update(self):
+        self.isBulletCollidedWithWall()
 
     def setSelectedWeapon(self, val):
         if(val <= len(self.weapons)):
@@ -685,7 +690,6 @@ class BulletsLoot(Loot):
 
 #bullet class
 class Bullet(pygame.sprite.Sprite):
-    isVisible = False
 
     def __init__(self, x, y, width, height, color, bullet_type):
         super().__init__()
@@ -851,11 +855,14 @@ class Game():
 
         collision_with_enemy = pygame.sprite.spritecollide(self.player, self.enemy_sprites_group, True)
 
+        
+
         for hit in collision_with_enemy:
             self.player.health -= 10
 
         self.all_sprites_group.draw(screen)
-        #self.all_sprites_group.update()
+        self.player.update()
+        #self.all_sprites_group.update(playerX, playerY)
         self.player.health_bar.update(playerX, playerY, self.player.rect.width, self.player.rect.height, self.player.health, True)
         #self.player.bullets_list.draw(screen)
 
