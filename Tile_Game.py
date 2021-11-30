@@ -1,7 +1,15 @@
+import tkinter
 import pygame
 import math
 import random
 import time
+from tkinter import *
+import os
+
+root = Tk()
+
+player_IMAGE_RAW = pygame.image.load(os.path.join('Alevel_project', 'player.png'))
+player_IMG = pygame.transform.rotate(pygame.transform.scale(player_IMAGE_RAW, (20, 20)), 180)
 
 BLACK = (0,0, 0)
 WHITE = (255, 255,255)
@@ -45,8 +53,9 @@ class People(pygame.sprite.Sprite):
         self.color = color
         self.bullets_list = pygame.sprite.Group()
 
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill(self.color)
+        self.image = player_IMG
+        #pygame.Surface([self.width, self.height])
+        #self.image.fill(self.color)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -232,6 +241,10 @@ class Player(People, pygame.sprite.Sprite):
     def update(self):
         self.isBulletCollidedWithWall()
 
+    def draw(self):
+        screen.blit(player_IMG, (self.rect.x, self.rect.y))
+        #pygame.display.update()
+
     def setSelectedWeapon(self, val):
         if(val <= len(self.weapons)):
             self.selectedWeapon = val-1
@@ -357,6 +370,7 @@ class Player(People, pygame.sprite.Sprite):
         player_hit_group = pygame.sprite.spritecollide(self, enemies, False)
 
         for hit in player_hit_group:
+           self.player.health -= 10
            incrementKills()
            incrementScore(10)
 
@@ -370,7 +384,7 @@ class Player(People, pygame.sprite.Sprite):
 
 
     def shoot(self):
-        self.getPlayerBearing()
+        
        
         #check if there are any bullets for pistols
         if (self.bullets[0] > 0 and self.selectedWeapon == 0 and self.weapons[0]==True): 
@@ -526,9 +540,6 @@ class Weapon(Loot):
             self.damage = 45
             self.weight = 6
 
-#class FireArm(Weapon):
-#    def __init__(self, )
-#        super().__init__()
 
 #Enemy class
 class Enemy(People):
@@ -606,9 +617,23 @@ class Enemy(People):
     def getVector(self):
         return self.attackVector
 
+    #experimental feature - spread the enemies out when they collide
+    def checkCollisionWithEnemies(self, enemies):
+        enemy_hit_group = pygame.sprite.spritecollide(self, enemies, False)
+        
+        if len(enemy_hit_group) <= 1: return
+
+        for hit in enemy_hit_group:
+            
+            #if(hit != self):
+                #self.rect.x += 20
+            print("Two enemies have collided!"+str(len(enemy_hit_group)))
+            
 
     #the enemy should chase the player in here, but IT DOESN't WORK!
-    def update(self, playerX, playerY):
+    def update(self, playerX, playerY, enemies):
+        #check collisions with other enemies
+        self.checkCollisionWithEnemies(enemies)
         self.drawHealthBar()
         #delta x
         self.attackVector[0] = self.rect.x - playerX
@@ -634,6 +659,8 @@ class Enemy(People):
 
         enemyX = self.rect.x
         enemyY = self.rect.y
+
+        #<----------logic for enemy chasing the player---------->#
 
         if distance > 0 and distance <= self.fieldView and self.isAttacking:
             #print("playerX: "+str(self.player.rect.x))
@@ -748,6 +775,7 @@ class Game():
         self.all_sprites_group.add(self.player)
 
         self.done = False
+        self.gameover = False
 
         #init the inventory list board
         self.inventoryList = InventoryList(50, 50, 100, 100)
@@ -760,6 +788,8 @@ class Game():
 
         #randomly place the loot
         self.createLoot()
+
+        self.isMenu = True
                     
         
         #creating the inner wall
@@ -770,11 +800,6 @@ class Game():
             self.numBricks += 1
         print(self.numBricks)
 
-
-
-        
-
-        #print(self.player)
 
     def incrementKills(self):
         self.kills += 1
@@ -830,10 +855,13 @@ class Game():
         enemy = Enemy(600, 600, 20, 20, RED, 1, 100, self.bricks_sprites_group, self.player)
         self.enemy_sprites_group.add(enemy)
         self.all_sprites_group.add(enemy)
-        self.mainLoop()
+
+        #self.mainLoop()
+        self.mainMenu()
 
     def end(self):
         self.done = True
+
 
     def createEnemies(self, quantity):
         for i in range(quantity):
@@ -849,33 +877,27 @@ class Game():
         playerY = self.player.getYPosition()
 
         self.player.isBulletCollisionWithEnemy(self.enemy_sprites_group, self.incrementKills, self.incrementScore)
-        self.enemy_sprites_group.update(playerX, playerY)
+        self.enemy_sprites_group.update(playerX, playerY, self.enemy_sprites_group)
         self.player.bullets_list.update(self.player.bullets_list, self.all_sprites_group)
         #render the player
 
         collision_with_enemy = pygame.sprite.spritecollide(self.player, self.enemy_sprites_group, True)
 
-        
-
         for hit in collision_with_enemy:
-            self.player.health -= 10
+            self.player.health -= 50
 
         self.all_sprites_group.draw(screen)
         self.player.update()
-        #self.all_sprites_group.update(playerX, playerY)
+        
         self.player.health_bar.update(playerX, playerY, self.player.rect.width, self.player.rect.height, self.player.health, True)
-        #self.player.bullets_list.draw(screen)
-
-        #self.player.drawHealthBar()
-
-        #self.bricks_sprites_group.draw(screen)
-        #self.loot_sprites_group.draw(screen)
-
         self.scoreBoard.draw(self.kills, self.score)
         self.inventoryList.draw(self.player.getInventory(), self.player.getInventoryWeight(), self.player.getWeightCapacity(), self.player.getBulletsList(), self.player.getWeaponsList())
         
         if (self.player.health <= 0):
+            self.player.kill()
+            self.gameover = True
             self.done = True
+
 
         if (len(self.loot_sprites_group)==0):
             self.createLoot()
@@ -887,7 +909,6 @@ class Game():
         pygame.display.update()
 
     def mainLoop(self):
-        
         while not self.done:      
             screen.fill(BLACK)
 
@@ -938,6 +959,68 @@ class Game():
 
             clock.tick(60)
         #EndWhile
+
+    click = False
+
+    def mainMenu(self):
+        title = "RPG Game - MONOSTREY"
+        text = "Main Menu"
+
+        
+
+        while self.isMenu:
+            screen.fill(BLACK)
+
+            click = False
+
+            #event when closing the window
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.isMenu = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        click = True
+                        
+            try:
+                self.draw_text(title, mainFont, (255, 255, 255), screen, 20, 20)
+                self.draw_text(text, mainFont, (255, 255, 255), screen, 20, 50)
+                if(self.gameover==True): 
+                    self.draw_text("GAME OVER. You are loser!)", mainFont, (255, 255, 255), screen, 100, 300)
+            except:
+                print("Error")
+ 
+            mx, my = pygame.mouse.get_pos()
+    
+            button_1 = pygame.Rect(50, 100, 200, 50)
+            button_2 = pygame.Rect(50, 200, 200, 50)
+
+            if button_1.collidepoint((mx, my)):
+                if(click==True):
+                    self.mainLoop()
+                    
+                
+            if button_2.collidepoint((mx, my)):
+                if(click==True):
+                    pygame.quit()
+                    self.isMenu = False
+                
+
+            pygame.draw.rect(screen, (255, 0, 0), button_1)
+            pygame.draw.rect(screen, (255, 0, 0), button_2)
+
+            self.draw_text('Play', mainFont, (255, 255, 255), screen, 50, 100)
+            self.draw_text('Exit', mainFont, (255, 255, 255), screen, 50, 200)
+
+            
+
+            pygame.display.update()
+            clock.tick(60)
+    
+    def draw_text(self, text, font, color, surface, x, y):
+        textobj = font.render(text, 1, color)
+        textrect = textobj.get_rect()
+        textrect.topleft = (x, y)
+        surface.blit(textobj, textrect)
 
 
 
