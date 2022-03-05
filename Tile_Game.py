@@ -399,7 +399,7 @@ class Player(People, pygame.sprite.Sprite):
             self.all_sprites_group.add(bullet)
             self.bullets[1] -= 1
         elif(self.bullets[2] > 0 and self.selectedWeapon == 2 and self.weapons[2]==True):
-            bullet = Bullet(self.rect.x, self.rect.y, 10, 20, BLUE, "gunshots")
+            bullet = Bullet(self.rect.x, self.rect.y, 10, 20, BLUE, "shotguns")
             self.bullets_list.add(bullet)
             self.all_sprites_group.add(bullet)
             self.bullets[2] -= 1
@@ -776,6 +776,10 @@ class Game():
 
         self.done = False
         self.gameover = False
+
+        #adding initial ammunition
+        self.player.weapons = [True, True, True]
+        self.player.bullets = [100, 100, 100]
 
         #init the inventory list board
         self.inventoryList = InventoryList(50, 50, 100, 100)
