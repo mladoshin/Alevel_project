@@ -877,6 +877,7 @@ class Game():
         playerY = self.player.getYPosition()
 
         self.player.isBulletCollisionWithEnemy(self.enemy_sprites_group, self.incrementKills, self.incrementScore)
+        
         self.enemy_sprites_group.update(playerX, playerY, self.enemy_sprites_group)
         self.player.bullets_list.update(self.player.bullets_list, self.all_sprites_group)
         #render the player
